@@ -1,24 +1,31 @@
+Style guide
+
 # SQL style guide
+
+## Purpose
+To improve the interoperability and quality of the marketing analytics team's SQL,
+which ultimately will help us scale up our reporting.
+
+## Values
+Utilizing this style guide aligns with the following Remitly values:
+1. Be an empathetic partner: Writing consistent easy to read SQL
+   shows empathy to both your future self and for anyone else who
+   will read your code in the future.
+2. Sweat the Details: How we work is important to the future of this department.
+   Coming up with the right query, while writing elegant, beautifully written SQL
+   shows how much we care about practicing our craft.
+4. Be an owner: We own the code we write, and adhering to this style guide will 
+   make that ownership much easier.
+6. Constructively Direct: If there is something about this style guide that doesn't
+   work, tell us. We collectively own this guide and it is supposed to work for all
+   of us.
 
 ## Overview
 
-You can use this set of guidelines, [fork them][fork] or make your own - the
-key here is that you pick a style and stick to it. To suggest changes
-or fix bugs please open an [issue][] or [pull request][pull] on GitHub.
-
-These guidelines are designed to be compatible with Joe Celko's [SQL Programming
-Style][celko] book to make adoption for teams who have already read that book
-easier. This guide is a little more opinionated in some areas and in others a
-little more relaxed. It is certainly more succinct where [Celko's book][celko]
-contains anecdotes and reasoning behind each rule as thoughtful prose.
-
-It is easy to include this guide in [Markdown format][dl-md] as a part of a
-project's code base or reference it here for anyone on the project to freely
-read—much harder with a physical book.
-
-SQL style guide by [Simon Holywell][simon] is licensed under a [Creative Commons
+This style guide is forked from the SQL style guide by [Simon Holywell][simon]
+and is licensed under a [Creative Commons 
 Attribution-ShareAlike 4.0 International License][licence].
-Based on a work at [http://www.sqlstyle.guide][self].
+Based on a work at [https://www.sqlstyle.guide/][sqlstyleguide].
 
 ## General
 
@@ -26,15 +33,23 @@ Based on a work at [http://www.sqlstyle.guide][self].
 
 * Use consistent and descriptive identifiers and names.
 * Make judicious use of white space and indentation to make code easier to read.
-* Store [ISO-8601][iso-8601] compliant time and date information
+* Store [ISO 8601][iso-8601] compliant time and date information
   (`YYYY-MM-DD HH:MM:SS.SSSSS`).
-* Try to use only standard SQL functions instead of vendor specific functions for
+* Try to only use standard SQL functions instead of vendor-specific functions for
   reasons of portability.
 * Keep code succinct and devoid of redundant SQL—such as unnecessary quoting or
   parentheses or `WHERE` clauses that can otherwise be derived.
 * Include comments in SQL code where necessary. Use the C style opening `/*` and
-  closing `*/` where possible otherwise preceed comments with `--` and finish
+  closing `*/` where possible otherwise precede comments with `--` and finish
   them with a new line.
+* Utilize CTEs instead of Subqueries unless there is a particularly compelling
+  reason to use a Subquery (a substantial boost in performance)
+* Specify the type of join you are using. While you can use 'JOIN' to do an
+  'INNER JOIN' it is harder to parse. Be specific
+* Whenever possible build queries left to right. If you are using a join other
+  than a left join, please put a comment to say why.
+* Put all columns in a select statement on their own line with commas at the
+  start of the line.
 
 ```sql
 SELECT file_hash  -- stored ssdeep hash
@@ -55,11 +70,13 @@ UPDATE file_system
 * Descriptive prefixes or Hungarian notation such as `sp_` or `tbl`.
 * Plurals—use the more natural collective term where possible instead. For example
   `staff` instead of `employees` or `people` instead of `individuals`.
-* Quoted identifiers—if you must use them then stick to SQL92 double quotes for
+* Quoted identifiers—if you must use them then stick to SQL-92 double quotes for
   portability (you may need to configure your SQL server to support this depending
   on vendor).
-* Object oriented design principles should not be applied to SQL or database
+* Object-oriented design principles should not be applied to SQL or database
   structures.
+* Avoid using GROUP BY 1, 2, 3 etc. Likewise, avoid using ORDER BY 1, 2, 3.
+  This convention makes code much harder to read and refactor.
 
 ## Naming conventions
 
@@ -68,7 +85,7 @@ UPDATE file_system
 * Ensure the name is unique and does not exist as a
   [reserved keyword][reserved-keywords].
 * Keep the length to a maximum of 30 bytes—in practice this is 30 characters
-  unless you are using multi-byte character set.
+  unless you are using a multi-byte character set.
 * Names must begin with a letter and may not end with an underscore.
 * Only use letters, numbers and underscores in names.
 * Avoid the use of multiple consecutive underscores—these can be hard to read.
@@ -155,7 +172,7 @@ It is best to avoid the abbreviated keywords and use the full length ones where
 available (prefer `ABSOLUTE` to `ABS`).
 
 Do not use database server specific keywords where an ANSI SQL keyword already
-exists performing the same function. This helps to make code more portable.
+exists performing the same function. This helps to make the code more portable.
 
 ```sql
 SELECT model_num
@@ -165,7 +182,7 @@ SELECT model_num
 
 ### White space
 
-To make the code easier to read it is important that the correct compliment of
+To make the code easier to read it is important that the correct complement of
 spacing is used. Do not crowd code or remove natural language spaces.
 
 #### Spaces
@@ -176,15 +193,27 @@ the readers eye to scan over the code and separate the keywords from the
 implementation detail. Rivers are [bad in typography][rivers], but helpful here.
 
 ```sql
-SELECT f.average_height, f.average_diameter
-  FROM flora AS f
- WHERE f.species_name = 'Banksia'
-    OR f.species_name = 'Sheoak'
-    OR f.species_name = 'Wattle';
+(SELECT f.species_name,
+        AVG(f.height) AS average_height, AVG(f.diameter) AS average_diameter
+   FROM flora AS f
+  WHERE f.species_name = 'Banksia'
+     OR f.species_name = 'Sheoak'
+     OR f.species_name = 'Wattle'
+  GROUP BY f.species_name, f.observation_date)
+
+  UNION ALL
+
+(SELECT b.species_name,
+        AVG(b.height) AS average_height, AVG(b.diameter) AS average_diameter
+   FROM botanic_garden_flora AS b
+  WHERE b.species_name = 'Banksia'
+     OR b.species_name = 'Sheoak'
+     OR b.species_name = 'Wattle'
+  GROUP BY b.species_name, b.observation_date);
 ```
 
 Notice that `SELECT`, `FROM`, etc. are all right aligned while the actual column
-names and implementation specific details are left aligned.
+names and implementation-specific details are left aligned.
 
 Although not exhaustive always include spaces:
 
@@ -212,8 +241,8 @@ Always include newlines/vertical space:
   large chunks of code.
 
 Keeping all the keywords aligned to the righthand side and the values left aligned
-creates a uniform gap down the middle of query. It makes it much easier to scan
-the query definition over quickly too.
+creates a uniform gap down the middle of the query. It also makes it much easier to
+to quickly scan over the query definition.
 
 ```sql
 INSERT INTO albums (title, release_date, recording_date)
@@ -250,18 +279,55 @@ SELECT r.last_name
   FROM riders AS r
        INNER JOIN bikes AS b
        ON r.bike_vin_num = b.vin_num
-          AND b.engines > 2
+          AND b.engine_tally > 2
 
        INNER JOIN crew AS c
        ON r.crew_chief_last_name = c.last_name
           AND c.chief = 'Y';
 ```
 
+#### Common Table Expressions (CTEs)
+
+CTEs should have a descriptive name no greater than 30 characters in length.
+CTEs should open with a docstring describing what the CTE does, and if it is
+a CTE that will be used in numerous queries, it should describe what it should
+join on. If it is a standard CTE that has been modified, the doctring should
+also specify what changes were made.
+
+``` sql
+WITH PROSPECTS AS (
+\*
+This CTE is a UNION between our prospective customers
+and our existing customers. This is commonly used to report
+on marketing efforts at all of our potential customers
+*\
+(
+SELECT id as prospect_id
+      , name as prospect_name
+      , email as prospect_email
+      
+      FROM salesforce.leads
+)      
+      UNION ALL
+(      
+SELECT      
+      id as prospect_id
+      , name as prospect_name
+      , email as prosect_name
+      
+      FROM salesforce.contacts
+)
+
+
+)
+
+```
+
 #### Subqueries
 
 Subqueries should also be aligned to the right side of the river and then laid
 out using the same style as any other query. Sometimes it will make sense to have
-the closing parenthesis on a new line at the same character position as it's
+the closing parenthesis on a new line at the same character position as its
 opening partner—this is especially true where you have nested subqueries.
 
 ```sql
@@ -297,20 +363,20 @@ SELECT CASE postcode
   FROM office_locations
  WHERE country = 'United Kingdom'
    AND opening_time BETWEEN 8 AND 9
-   AND postcode IN ('EH1', 'BN1', 'NN1', 'KW1')
+   AND postcode IN ('EH1', 'BN1', 'NN1', 'KW1');
 ```
 
 ## Create syntax
 
-When declaring schema information it is also important to maintain human
-readable code. To facilitate this ensure the column definitions are ordered and
-grouped where it makes sense to do so.
+When declaring schema information it is also important to maintain human-readable
+code. To facilitate this ensure that the column definitions are ordered and
+grouped together where it makes sense to do so.
 
 Indent column definitions by four (4) spaces within the `CREATE` definition.
 
 ### Choosing data types
 
-* Where possible do not use vendor specific data types—these are not portable and
+* Where possible do not use vendor-specific data types—these are not portable and
   may not be available in older versions of the same vendor's software.
 * Only use `REAL` or `FLOAT` types where it is strictly necessary for floating
   point mathematics otherwise prefer `NUMERIC` and `DECIMAL` at all times. Floating
@@ -331,7 +397,7 @@ about though so it is important that a standard set of guidelines are followed.
 
 #### Choosing keys
 
-Deciding the column(s) that will form the keys in the definition should be a 
+Deciding the column(s) that will form the keys in the definition should be a
 carefully considered activity as it will effect performance and data integrity.
 
 1. The key should be unique to some degree.
@@ -366,7 +432,7 @@ constraints along with field value validation.
 * If it is a multi-column constraint then consider putting it as close to both
   column definitions as possible and where this is difficult as a last resort
   include them at the end of the `CREATE TABLE` definition.
-* If it is a table level constraint that applies to the entire table then it
+* If it is a table-level constraint that applies to the entire table then it
   should also appear at the end.
 * Use alphabetical order where `ON DELETE` comes before `ON UPDATE`.
 * If it make senses to do so align each aspect of the query on the same character
@@ -393,22 +459,22 @@ CREATE TABLE staff (
     first_name     VARCHAR(100) NOT NULL,
     pens_in_drawer INT(2)       NOT NULL,
                    CONSTRAINT pens_in_drawer_range
-                   CHECK(pens_in_drawer >= 1 AND pens_in_drawer < 100)
+                   CHECK(pens_in_drawer BETWEEN 1 AND 99)
 );
 ```
 
 ### Designs to avoid
 
-* Object oriented design principles do not effectively translate to relational
+* Object-oriented design principles do not effectively translate to relational
   database designs—avoid this pitfall.
 * Placing the value in one column and the units in another column. The column
-  should make the units self evident to prevent the requirement to combine
+  should make the units self-evident to prevent the requirement to combine
   columns again later in the application. Use `CHECK()` to ensure valid data is
   inserted into the column.
-* [EAV (Entity Attribute Value)][eav] tables—use a specialist product intended for
+* [Entity–Attribute–Value][eav] (EAV) tables—use a specialist product intended for
   handling such schema-less data instead.
-* Splitting up data that should be in one table across many because of arbitrary
-  concerns such as time-based archiving or location in a multi-national
+* Splitting up data that should be in one table across many tables because of
+  arbitrary concerns such as time-based archiving or location in a multinational
   organisation. Later queries must then work across multiple tables with `UNION`
   rather than just simply querying one table.
 
@@ -1247,6 +1313,49 @@ ZEROFILL
 ZONE
 ```
 
+### Column data types
+
+These are some suggested column data types to use for maximum compatibility between database engines.
+
+#### Character types:
+
+* CHAR
+* CLOB
+* VARCHAR
+
+#### Numeric types
+
+* Exact numeric types
+    * BIGINT
+    * DECIMAL
+    * DECFLOAT
+    * INTEGER
+    * NUMERIC
+    * SMALLINT
+* Approximate numeric types
+    * DOUBLE PRECISION
+    * FLOAT
+    * REAL
+
+#### Datetime types
+
+* DATE
+* TIME
+* TIMESTAMP
+
+#### Binary types:
+
+* BINARY
+* BLOB
+* VARBINARY
+
+#### Additional types
+
+* BOOLEAN
+* INTERVAL
+* XML
+
+
 [simon]: https://www.simonholywell.com/?utm_source=sqlstyle.guide&utm_medium=link&utm_campaign=md-document
     "SimonHolywell.com"
 [issue]: https://github.com/treffynnon/sqlstyle.guide/issues
@@ -1261,13 +1370,13 @@ ZONE
     "Download the guide in Markdown format"
 [iso-8601]: https://en.wikipedia.org/wiki/ISO_8601
     "Wikipedia: ISO 8601"
-[rivers]: http://practicaltypography.com/one-space-between-sentences.html
+[rivers]: https://practicaltypography.com/one-space-between-sentences.html
     "Practical Typography: one space between sentences"
 [reserved-keywords]: #reserved-keyword-reference
-    "Reserved keyword reference" 
+    "Reserved keyword reference"
 [eav]: https://en.wikipedia.org/wiki/Entity%E2%80%93attribute%E2%80%93value_model
     "Wikipedia: Entity–attribute–value model"
-[self]: http://www.sqlstyle.guide
+[sqlstyleguide]: https://www.sqlstyle.guide/
     "SQL style guide by Simon Holywell"
-[licence]: http://creativecommons.org/licenses/by-sa/4.0/
+[licence]: https://creativecommons.org/licenses/by-sa/4.0/
     "Creative Commons Attribution-ShareAlike 4.0 International License"
