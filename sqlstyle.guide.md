@@ -296,11 +296,11 @@ also specify what changes were made.
 
 ``` sql
 WITH PROSPECTS AS (
-\*
+/*
 This CTE is a UNION between our prospective customers
 and our existing customers. This is commonly used to report
 on marketing efforts at all of our potential customers
-*\
+*/
 (
 SELECT id as prospect_id
       , name as prospect_name
