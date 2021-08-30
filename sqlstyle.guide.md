@@ -14,9 +14,9 @@ Utilizing this style guide aligns with the following Remitly values:
 2. Sweat the Details: How we work is important to the future of this department.
    Coming up with the right query, while writing elegant, beautifully written SQL
    shows how much we care about practicing our craft.
-4. Be an owner: We own the code we write, and adhering to this style guide will 
+3. Be an owner: We own the code we write, and adhering to this style guide will 
    make that ownership much easier.
-6. Constructively Direct: If there is something about this style guide that doesn't
+4. Constructively Direct: If there is something about this style guide that doesn't
    work, tell us. We collectively own this guide and it is supposed to work for all
    of us.
 
@@ -67,6 +67,9 @@ UPDATE file_system
 ### Avoid
 
 * CamelCase—it is difficult to scan quickly.
+* Using SELECT * in production code. There are 2 reasons for this.
+   The first is that it is computationally faster
+   The second is that it is easier to debug queries that have specified columns.
 * Descriptive prefixes or Hungarian notation such as `sp_` or `tbl`.
 * Plurals—use the more natural collective term where possible instead. For example
   `staff` instead of `employees` or `people` instead of `individuals`.
